@@ -1,14 +1,18 @@
+import { Injectable } from '@nestjs/common';
 import { IDiscountStrategy } from '../discount-strategy.interface';
-import { PromoCode } from '../../../domain/entities/promo-code';
-import { OrderableInterface } from '../../../domain/interfaces/orderable.interface';
-import { DiscountType } from '../../../domain/entities/promo-code.types';
-import { Money } from '../../../domain/value-objects/money';
+import { DiscountType } from '../../../domain/entities/promo-code.entity';
 
+@Injectable()
 export class PercentDiscountStrategy implements IDiscountStrategy {
-  calculate(promo: PromoCode, order: OrderableInterface): number {
-    return new Money(order.getSubtotal()).multiply(promo.value / 100).amount;
+  calculate(value: number, subtotal: number): number {
+    return subtotal * (value / 100);
   }
+
   canHandle(type: DiscountType): boolean {
     return type === DiscountType.PERCENT;
+  }
+
+  getName(): string {
+    return 'PercentDiscountStrategy';
   }
 }

@@ -1,30 +1,35 @@
+import { Injectable } from '@nestjs/common';
 import { IDiscountStrategy } from '../discount-strategy.interface';
-import { PromoCode } from '../../../domain/entities/promo-code';
-import { OrderableInterface } from '../../../domain/interfaces/orderable.interface';
-import { DiscountType } from '../../../domain/entities/promo-code.types';
-import { TierConfiguration } from '../../../domain/entities/tier-configuration';
-import { Money } from '../../../domain/value-objects/money';
+import { DiscountType } from '../../../domain/entities/promo-code.entity';
+import { TierConfiguration } from '../../../domain/entities/tier-configuration.entity';
 
+@Injectable()
 export class TieredDiscountStrategy implements IDiscountStrategy {
-  calculate(promo: PromoCode, order: OrderableInterface): number {
-    const totalOrders = order.getOrderContext().buyerProfile.totalOrders;
-    const eligibleTier = this.findEligibleTier(promo.tiers, totalOrders);
-    if (!eligibleTier) return 0;
-    return new Money(order.getSubtotal()).multiply(
-      eligibleTier.discountPercent / 100,
-    ).amount;
+  calculate(
+    value: number,
+    subtotal: number,
+    tiers?: TierConfiguration[],
+    orderCount?: number,
+  ): number {
+    if (!tiers || !orderCount) {
+      return 0;
+    }
+
+    const sortedTiers = [...tiers].sort((a, b) => b.minOrders - a.minOrders);
+    const applicableTier = sortedTiers.find((tier) => tier.appliesFor(orderCount));
+
+    if (!applicableTier) {
+      return 0;
+    }
+
+    return subtotal * (applicableTier.discountPercent / 100);
   }
 
   canHandle(type: DiscountType): boolean {
     return type === DiscountType.TIERED;
   }
 
-  private findEligibleTier(
-    tiers: readonly TierConfiguration[],
-    totalOrders: number,
-  ): TierConfiguration | null {
-    const eligible = tiers.filter((t) => t.minOrders <= totalOrders);
-    if (eligible.length === 0) return null;
-    return eligible.reduce((max, t) => (t.minOrders > max.minOrders ? t : max));
+  getName(): string {
+    return 'TieredDiscountStrategy';
   }
 }

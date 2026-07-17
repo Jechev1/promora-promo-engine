@@ -1,34 +1,47 @@
-import { PromoCode } from '../../domain/entities/promo-code';
+import { Injectable } from '@nestjs/common';
+import { IDiscountStrategy } from './discount-strategy.interface';
+import { CalculationResult } from '../../domain/value-objects/calculation-result';
+import { PromoCode } from '../../domain/entities/promo-code.entity';
 import { OrderableInterface } from '../../domain/interfaces/orderable.interface';
-import { DiscountStrategyFactory } from '../factories/discount-strategy.factory';
-import { MaxDiscountAmountRule } from './post-rules/max-discount-amount.rule';
-import { Money } from '../../domain/value-objects/money';
 
-export interface CalculationResult {
-  originalAmount: number;
-  discountAmount: number;
-  finalAmount: number;
-}
-
+@Injectable()
 export class DiscountCalculator {
-  constructor(
-    private readonly strategyFactory: DiscountStrategyFactory,
-    private readonly maxDiscountRule: MaxDiscountAmountRule = new MaxDiscountAmountRule(),
-  ) {}
+  private strategies: IDiscountStrategy[] = [];
 
-  calculate(promo: PromoCode, order: OrderableInterface): CalculationResult {
-    const strategy = this.strategyFactory.getStrategy(promo.type);
-    const subtotalMoney = new Money(order.getSubtotal());
-    const rawDiscount = new Money(strategy.calculate(promo, order));
-    const cappedDiscount = new Money(
-      this.maxDiscountRule.apply(promo, rawDiscount.amount),
+  constructor(strategies: IDiscountStrategy[]) {
+    this.strategies = strategies;
+  }
+
+  calculate(promoCode: PromoCode, order: OrderableInterface): CalculationResult {
+    const strategy = this.selectStrategy(promoCode.type);
+
+    if (!strategy) {
+      throw new Error(`No strategy found for type: ${promoCode.type}`);
+    }
+
+    const subtotal = order.getSubtotal();
+    let discountAmount: number;
+
+    if (promoCode.type.toString() === 'tiered') {
+      const orderCount = order.getBuyer().totalOrders;
+      discountAmount = (strategy as any).calculate(
+        promoCode.value,
+        subtotal,
+        promoCode.tiers,
+        orderCount,
+      );
+    } else {
+      discountAmount = strategy.calculate(promoCode.value, subtotal);
+    }
+
+    return new CalculationResult(
+      discountAmount,
+      promoCode.type,
+      subtotal,
     );
-    const finalDiscount = Money.min(cappedDiscount, subtotalMoney).amount;
-    const subtotal = subtotalMoney.amount;
-    return {
-      originalAmount: subtotal,
-      discountAmount: finalDiscount,
-      finalAmount: subtotalMoney.subtract(new Money(finalDiscount)).amount,
-    };
+  }
+
+  private selectStrategy(type: any): IDiscountStrategy | undefined {
+    return this.strategies.find((s) => s.canHandle(type));
   }
 }
