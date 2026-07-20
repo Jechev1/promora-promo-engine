@@ -4,9 +4,6 @@ ASD.docx
 # Variables de entorno
 .env
 
-# Reportes
-QA_REPORT.md
-
 # Cobertura
 coverage/
 
