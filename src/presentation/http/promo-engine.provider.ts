@@ -5,6 +5,9 @@ import { DynamicValidationPipeline } from '../../application/validation/pipeline
 import { ValidationRuleFactory } from '../../application/factories/validation-rule.factory';
 import { DiscountStrategyFactory } from '../../application/factories/discount-strategy.factory';
 import { DiscountCalculator } from '../../application/calculation/discount-calculator';
+import { FixedDiscountStrategy } from '../../application/calculation/strategies/fixed-discount.strategy';
+import { PercentDiscountStrategy } from '../../application/calculation/strategies/percent-discount.strategy';
+import { TieredDiscountStrategy } from '../../application/calculation/strategies/tiered-discount.strategy';
 import { InMemoryPromoCodeRepository } from '../../infrastructure/repositories/in-memory/in-memory-promo-code.repository';
 import { InMemoryPromoCodeUsageRepository } from '../../infrastructure/repositories/in-memory/in-memory-usage.repository';
 import { InMemoryRestrictedUserRepository } from '../../infrastructure/repositories/in-memory/in-memory-restricted-user.repository';
@@ -66,12 +69,18 @@ export class PromoEngineProvider implements OnModuleDestroy {
       this.categoryRepo,
     );
     const dynamic = new DynamicValidationPipeline(ruleFactory);
-    const validationEngine = new ValidationEngine(mandatory, dynamic);
-    const calculator = new DiscountCalculator(new DiscountStrategyFactory());
+    const strategies = [
+      new FixedDiscountStrategy(),
+      new PercentDiscountStrategy(),
+      new TieredDiscountStrategy(),
+    ];
+    const calculator = new DiscountCalculator(strategies);
 
     this.engine = new PromoCodeEngine(
-      validationEngine,
+      mandatory,
+      dynamic,
       calculator,
+      this.promoRepo,
       this.usageRepo,
     );
     if (useInMemory) {

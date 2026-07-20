@@ -16,15 +16,21 @@ export interface OrderFactoryOverrides {
 
 export class OrderFactory {
   static create(overrides: OrderFactoryOverrides = {}): Order {
+    const orderId = overrides.id ?? uuid();
     const buyer = overrides.buyer ?? BuyerFactory.create();
+    const subtotal = overrides.subtotal ?? 100;
+    const categories = overrides.categoryId ? [overrides.categoryId] : ['cat-default'];
+
     const context = new OrderContext(
+      orderId,
+      buyer.buyerId,
+      subtotal,
+      categories,
       buyer,
-      overrides.categoryId ?? 'cat-default',
-      overrides.currentOrders ?? [],
     );
     return new Order(
-      overrides.id ?? uuid(),
-      overrides.subtotal ?? 100,
+      orderId,
+      subtotal,
       context,
       overrides.status ?? OrderStatus.DRAFT,
     );

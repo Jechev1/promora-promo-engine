@@ -1,21 +1,20 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { IDiscountStrategy } from '../discount-strategy.interface';
-import { DiscountType } from '../../../domain/entities/promo-code.entity';
+import { DiscountType } from '../../domain/entities/promo-code.types';
+import { PromoCode } from '../../domain/entities/promo-code';
+import { OrderableInterface } from '../../domain/interfaces/orderable.interface';
 
 @Injectable()
 export class FixedDiscountStrategy implements IDiscountStrategy {
-  calculate(value: number, subtotal: number): number {
-    if (value < 0) {
-      throw new Error(`Descuento negativo inválido: ${value}`);
+  calculate(promo: PromoCode, order: OrderableInterface): number {
+    if (promo.value < 0) {
+      throw new Error(`Descuento negativo invÃ¡lido: ${promo.value}`);
     }
-    return Math.min(value, subtotal);
+    const subtotal = order.getSubtotal();
+    return Math.min(promo.value, subtotal);
   }
 
   canHandle(type: DiscountType): boolean {
     return type === DiscountType.FIXED;
-  }
-
-  getName(): string {
-    return 'FixedDiscountStrategy';
   }
 }
