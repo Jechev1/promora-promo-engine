@@ -1,4 +1,4 @@
-import { DiscountType } from '../entities/promo-code.entity';
+import { DiscountType } from '../entities/promo-code.types';
 
 export class CalculationResult {
   discountAmount: number;

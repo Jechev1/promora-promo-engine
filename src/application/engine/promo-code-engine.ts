@@ -1,5 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import { ValidationEngine } from './validation-engine';
+import { MandatoryValidationPipeline } from '../validation/pipelines/mandatory-validation.pipeline';
+import { DynamicValidationPipeline } from '../validation/pipelines/dynamic-validation.pipeline';
 import {
   DiscountCalculator,
   CalculationResult,
@@ -9,7 +11,8 @@ import { ValidationResult } from '../../domain/value-objects/validation-result';
 import { OrderableInterface } from '../../domain/interfaces/orderable.interface';
 import { BuyerProfile } from '../../domain/entities/buyer-profile';
 import { PromoCodeUsage } from '../../domain/entities/promo-code-usage';
-import { IPromoCodeUsageRepository } from '../../domain/interfaces/promo-code-usage.repository';
+import type { IPromoCodeRepository } from '../../domain/interfaces/promo-code.repository';
+import type { IPromoCodeUsageRepository } from '../../domain/interfaces/promo-code-usage.repository';
 import { ErrorCode } from '../../domain/errors/error-codes';
 import { DuplicatePromoUsageError } from '../../domain/errors/duplicate-promo-usage.error';
 
@@ -20,11 +23,17 @@ export interface PromoCodeResult {
 
 export class PromoCodeEngine {
   private readonly applyQueues = new Map<string, Promise<void>>();
+  private validationEngine: ValidationEngine;
+
   constructor(
-    private readonly validationEngine: ValidationEngine,
+    mandatoryPipeline: MandatoryValidationPipeline,
+    dynamicPipeline: DynamicValidationPipeline,
     private readonly discountCalculator: DiscountCalculator,
+    private readonly promoCodeRepository: IPromoCodeRepository,
     private readonly usageRepo: IPromoCodeUsageRepository,
-  ) {}
+  ) {
+    this.validationEngine = new ValidationEngine(mandatoryPipeline, dynamicPipeline);
+  }
 
   async validate(
     promoCodeString: string,

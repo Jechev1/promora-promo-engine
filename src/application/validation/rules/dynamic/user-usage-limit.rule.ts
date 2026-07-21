@@ -17,12 +17,10 @@ export class UserUsageLimitRule extends ValidationRule {
     if (!rule) return ValidationResult.success();
 
     const limit = Number(rule.parameters.limit ?? 0);
-    const excludeIds = context.order.getOrderContext().currentOrders;
 
     const count = await this.usageRepo.countPaidUsesByCodeAndBuyer(
       context.promo!.id,
       context.buyer.buyerId,
-      excludeIds,
     );
 
     if (count >= limit) {

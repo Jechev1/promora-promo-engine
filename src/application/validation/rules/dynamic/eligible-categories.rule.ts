@@ -19,12 +19,10 @@ export class EligibleCategoriesRule extends ValidationRule {
     if (!rule) return ValidationResult.success();
 
     const categoryIds = (rule.parameters.categoryIds as string[]) ?? [];
-    const orderCategory = context.order.getOrderContext().categoryId;
+    const orderCategories = context.order.getOrderContext().categories;
 
-    const eligible = await this.specification.isSatisfiedBy({
-      categoryId: orderCategory,
-      eligibleCategoryIds: categoryIds,
-    });
+    const eligible = orderCategories.some((cat) => categoryIds.includes(cat));
+
     if (!eligible) {
       return ValidationResult.failure(ErrorCode.INVALID_CODE);
     }

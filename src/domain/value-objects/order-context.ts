@@ -1,4 +1,4 @@
-import { BuyerProfile } from '../entities/buyer-profile.entity';
+import { BuyerProfile } from '../entities/buyer-profile';
 
 export class OrderContext {
   readonly orderId: string;
@@ -33,7 +33,7 @@ export class OrderContext {
   }
 
   exceedsGlobalAmountLimit(limit: number): boolean {
-    return this.buyerProfile.totalSpent > limit;
+    return this.subtotal > limit;
   }
 
   exceedsOrderLimit(limit: number): boolean {

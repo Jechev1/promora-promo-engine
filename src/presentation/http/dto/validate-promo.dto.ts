@@ -13,8 +13,8 @@ export interface ValidatePromoResponseDto {
   valid: boolean;
   errorCode?: string;
   discount?: {
-    originalAmount: number;
+    originalSubtotal: number;
     discountAmount: number;
-    finalAmount: number;
+    finalSubtotal: number;
   };
 }

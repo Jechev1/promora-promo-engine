@@ -27,9 +27,11 @@ export class PrismaOrderRepository implements IOrderRepository {
     const paidCount = await this.countPaidByBuyer(row.buyerId);
     const buyer = new BuyerProfile(row.buyer.id, paidCount, paidCount === 0);
     const context = new OrderContext(
+      row.id,
+      row.buyerId,
+      row.subtotal.toNumber(),
+      row.categoryId ? [row.categoryId] : [],
       buyer,
-      row.categoryId,
-      currentOrders.map((o) => o.id),
     );
     const args: ConstructorParameters<typeof Order> = [
       row.id,
@@ -56,9 +58,10 @@ export class PrismaOrderRepository implements IOrderRepository {
         isFirstBuyer: context.buyerProfile.isFirstBuyer,
       },
     });
+    const categoryId = context.categories[0] || 'default';
     await this.prisma.category.upsert({
-      where: { id: context.categoryId },
-      create: { id: context.categoryId, name: context.categoryId },
+      where: { id: categoryId },
+      create: { id: categoryId, name: categoryId },
       update: {},
     });
     const type =
@@ -72,14 +75,14 @@ export class PrismaOrderRepository implements IOrderRepository {
       create: {
         id: order.id,
         buyerId: context.buyerProfile.buyerId,
-        categoryId: context.categoryId,
+        categoryId: categoryId,
         subtotal: order.getSubtotal(),
         status: order.status,
         type,
       },
       update: {
         buyerId: context.buyerProfile.buyerId,
-        categoryId: context.categoryId,
+        categoryId: categoryId,
         subtotal: order.getSubtotal(),
         status: order.status,
         type,

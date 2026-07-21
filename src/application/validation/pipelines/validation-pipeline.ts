@@ -1,17 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { IValidationRule, ValidationContext } from './validation-rule.interface';
-import { ValidationResult } from '../../domain/value-objects/validation-result';
+import { ValidationContext } from '../../../domain/value-objects/validation-context';
+import { ValidationResult } from '../../../domain/value-objects/validation-result';
+import { ValidationRule } from '../rules/validation-rule';
 
 @Injectable()
 export class ValidationPipeline {
-  private mandatoryRules: IValidationRule[] = [];
-  private dynamicRules: IValidationRule[] = [];
+  private mandatoryRules: ValidationRule[] = [];
+  private dynamicRules: ValidationRule[] = [];
 
-  registerMandatoryRule(rule: IValidationRule): void {
+  registerMandatoryRule(rule: ValidationRule): void {
     this.mandatoryRules.push(rule);
   }
 
-  registerDynamicRule(rule: IValidationRule): void {
+  registerDynamicRule(rule: ValidationRule): void {
     this.dynamicRules.push(rule);
   }
 
@@ -24,10 +25,6 @@ export class ValidationPipeline {
     }
 
     for (const rule of this.dynamicRules) {
-      if (!rule.appliesTo(context.promoCode)) {
-        continue;
-      }
-
       const result = await rule.handle(context);
       if (!result.isValid) {
         return result;

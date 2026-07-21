@@ -17,14 +17,8 @@ export class FirstOrderOnlyRule extends ValidationRule {
     const rule = context.promo?.getRule(RuleType.FIRST_ORDER_ONLY);
     if (!rule) return ValidationResult.success();
 
-    const paidOrders = this.orderRepo
-      ? await this.orderRepo.countPaidByBuyer(
-          context.buyer.buyerId,
-          context.order.getOrderContext().currentOrders,
-        )
-      : context.buyer.isFirstBuyer
-        ? 0
-        : 1;
+    const paidOrders = context.order.getOrderContext().getPreviousOrderCount();
+
     if (
       !(await this.specification.isSatisfiedBy({ paidOrderCount: paidOrders }))
     ) {

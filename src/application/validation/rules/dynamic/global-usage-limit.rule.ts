@@ -17,11 +17,9 @@ export class GlobalUsageLimitRule extends ValidationRule {
     if (!rule) return ValidationResult.success();
 
     const limit = Number(rule.parameters.limit ?? 0);
-    const excludeIds = context.order.getOrderContext().currentOrders;
 
     const count = await this.usageRepo.countPaidUsesByCode(
       context.promo!.id,
-      excludeIds,
     );
 
     if (count >= limit) {

@@ -20,7 +20,7 @@ export class ValidationEngine {
       if (
         !orderContext ||
         !orderContext.buyerProfile ||
-        typeof orderContext.categoryId !== 'string'
+        !Array.isArray(orderContext.categories)
       )
         return ValidationResult.failure(ErrorCode.INVALID_ORDER);
       if (!Number.isFinite(subtotal) || subtotal < 0)

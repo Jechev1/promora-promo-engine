@@ -1,8 +1,8 @@
 ﻿import { Injectable } from '@nestjs/common';
 import { IDiscountStrategy } from '../discount-strategy.interface';
-import { DiscountType } from '../../domain/entities/promo-code.types';
-import { PromoCode } from '../../domain/entities/promo-code';
-import { OrderableInterface } from '../../domain/interfaces/orderable.interface';
+import { DiscountType } from '../../../domain/entities/promo-code.types';
+import { PromoCode } from '../../../domain/entities/promo-code';
+import { OrderableInterface } from '../../../domain/interfaces/orderable.interface';
 
 @Injectable()
 export class PercentDiscountStrategy implements IDiscountStrategy {

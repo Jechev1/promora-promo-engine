@@ -41,3 +41,5 @@ export class DiscountCalculator {
     return this.strategies.find((s) => s.canHandle(type));
   }
 }
+
+export { CalculationResult };
